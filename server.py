@@ -1,8 +1,6 @@
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from urllib.request import Request, urlopen
 from pathlib import Path
-import gzip
-import zlib
+import json
 
 ROOT = Path(__file__).parent
 
@@ -13,28 +11,41 @@ class RocketHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.startswith("/api/"):
-            return self.proxy_request()
+            return self.handle_api_get()
+        # توجيه الملفات المفقودة إلى index.html لتشتغل مسارات اللعبة بسلاسة
         requested = ROOT / self.path.lstrip("/").split("?", 1)[0]
-        if not requested.exists() and (self.path.startswith("/epic/") or self.path.startswith("/assets/")):
-            return self.proxy_static_asset()
+        if not requested.exists() and not self.path.startswith("/assets/"):
+            self.path = "/index.html"
         return super().do_GET()
 
     def do_POST(self):
         if self.path.startswith("/api/"):
-            return self.proxy_request()
+            return self.handle_api_post()
         return super().do_POST()
 
-    def proxy_request(self):
+    def handle_api_get(self):
         request_path = self.path.split("?", 1)[0].rstrip("/")
-        if request_path == "/api/gifts" or request_path.startswith("/api/gifts/"):
-            payload = b'[{"id":"vice-cream-demo","name":"Vice Cream","model_name":"Vice Cream","price":4.08,"price_ton":"4.08","priceTon":4.08,"status":"available","imageUrl":"https://cdn.changes.tg/gifts/models/vice-cream.webp","backdropName":null}]'
+        
+        if "gifts" in request_path:
+            payload = json.dumps([{
+                "id": "vice-cream-demo",
+                "name": "Vice Cream",
+                "model_name": "Vice Cream",
+                "price": 4.08,
+                "price_ton": "4.08",
+                "priceTon": 4.08,
+                "status": "available",
+                "imageUrl": "https://cdn.changes.tg/gifts/models/vice-cream.webp",
+                "backdropName": None
+            }]).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
             return
-        if request_path == "/api/wallet/balance" or request_path.startswith("/api/wallet/balance/"):
+
+        if "wallet/balance" in request_path:
             payload = b'{"availableTON":"1000","balanceTON":"1000","starsBalance":"0"}'
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -42,55 +53,26 @@ class RocketHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(payload)
             return
-        length = int(self.headers.get("Content-Length", "0"))
-        body = self.rfile.read(length) if length else None
-        target = "https://hello-problem-solver-2.replit.app" + self.path
-        # Never forward the browser's Accept-Encoding: the remote may answer
-        # gzip/brotli, and passing those raw bytes through without the
-        # Content-Encoding header corrupts JSON responses (e.g. gift tiers).
-        headers = {
-            key: value for key, value in self.headers.items()
-            if key.lower() not in {"host", "accept-encoding"}
-        }
-        try:
-            with urlopen(Request(target, data=body, headers=headers, method=self.command)) as response:
-                payload = response.read()
-                encoding = (response.headers.get("Content-Encoding") or "").strip().lower()
-                if encoding == "gzip":
-                    try:
-                        payload = gzip.decompress(payload)
-                    except OSError:
-                        pass
-                elif encoding == "deflate":
-                    try:
-                        payload = zlib.decompress(payload)
-                    except zlib.error:
-                        try:
-                            payload = zlib.decompress(payload, -zlib.MAX_WBITS)
-                        except zlib.error:
-                            pass
-                self.send_response(response.status)
-                for key, value in response.headers.items():
-                    if key.lower() not in {"transfer-encoding", "connection", "content-encoding", "content-length"}:
-                        self.send_header(key, value)
-                self.send_header("Content-Length", str(len(payload)))
-                self.end_headers()
-                self.wfile.write(payload)
-        except Exception as error:
-            self.send_error(502, str(error))
 
-    def proxy_static_asset(self):
-        target = "https://hello-problem-solver-2.replit.app" + self.path
-        try:
-            with urlopen(target) as response:
-                payload = response.read()
-                self.send_response(response.status)
-                self.send_header("Content-Type", response.headers.get_content_type())
-                self.send_header("Content-Length", str(len(payload)))
-                self.end_headers()
-                self.wfile.write(payload)
-        except Exception as error:
-            self.send_error(502, str(error))
+        # الرد الافتراضي لأي طلب API آخر لتجنب حصول خطأ 502
+        payload = b'{"status": "ok"}'
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def handle_api_post(self):
+        # استقبال طلبات الـ POST محلياً والرد بنجاح لتجنب أي توقف في اللعبة
+        payload = b'{"success": true, "status": "ok"}'
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
 
 
-ThreadingHTTPServer(("", 8001), RocketHandler).serve_forever()
+if __name__ == "__main__":
+    port = 8001
+    print(f"🚀 Local Rocket Server running on port {port}...")
+    ThreadingHTTPServer(("0.0.0.0", port), RocketHandler).serve_forever()
