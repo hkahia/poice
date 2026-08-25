@@ -129,8 +129,6 @@
           console.log('[TELEGRAM] ✅ disableVerticalSwipes() called');
         }
         
-        // متغيّرات المساحة الآمنة تنضبط فوراً قبل ما يركّب React — نفس ما يسوّونه
-        // بصفحتهم، حتى ما تقفز الواجهة أول ما تفتح
         try {
           var _p = tg.platform;
           if (_p === 'android' || _p === 'ios') {
@@ -155,7 +153,6 @@
       html, body {
         min-height: calc(100vh + 1px);
         overflow-y: auto;
-        /* منع الوميض الأبيض عند الفتح — نفس ملفهم */
         background-color: #121212;
         margin: 0;
         padding: 0;
@@ -175,34 +172,11 @@
         height: 0 !important;
         width: 0 !important;
       }
-  
-    /* شاشة تحميل اللعبة — inline حتى تبين فوراً قبل أي ملف خارجي */
-    #splash {
-      position: fixed; inset: 0; z-index: 99999;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: linear-gradient(to bottom, #1a1a1a, #121212);
-    }
-    #splash .rkt-icon { animation: rkt-float 2s ease-in-out infinite; }
-    #splash .rkt-spinner {
-      margin-top: 20px; width: 28px; height: 28px; border-radius: 50%;
-      border: 2px solid rgba(135, 116, 225, .25); border-top-color: #8774E1;
-      animation: rkt-spin .8s linear infinite;
-    }
-    @keyframes rkt-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    @keyframes rkt-spin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) {
-      #splash .rkt-icon { animation: none; }
-      #splash .rkt-spinner { animation-duration: 2s; }
-    }
-  </style>
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- ملصق الصاروخ الثابت — يتحمّل من أول لحظة حتى ما يظهر بديل -->
     <link rel="preload" href="/rocket-static.png?v=3" as="image" fetchpriority="high">
-    <!-- Non-blocking font load — never delays first paint -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <style>
-  </style>
     <script>
       const NativeWebSocket = window.WebSocket;
       window.WebSocket = class extends NativeWebSocket {
@@ -229,85 +203,20 @@
   </head>
 
   <body>
-    <div id="splash">
-      <svg class="rkt-icon" width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2C12 2 8 6 8 12C8 14.5 9 16.5 10 18L8 22H16L14 18C15 16.5 16 14.5 16 12C16 6 12 2 12 2Z" fill="url(#rkt-splash-grad)" stroke="#8774E1" stroke-width="1"/>
-        <circle cx="12" cy="10" r="2" fill="#1a1a1a"/>
-        <path d="M8 12C6 12 4 14 4 14L6 16C6 16 7 14 8 14" fill="#8774E1" opacity="0.8"/>
-        <path d="M16 12C18 12 20 14 20 14L18 16C18 16 17 14 16 14" fill="#8774E1" opacity="0.8"/>
-        <path d="M10 22L9 24H15L14 22" fill="#FF6B35"/>
-        <path d="M11 22L10.5 25H13.5L13 22" fill="#FFD700"/>
-        <defs>
-          <linearGradient id="rkt-splash-grad" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#a594f9"/>
-            <stop offset="100%" stop-color="#8774E1"/>
-          </linearGradient>
-        </defs>
+    <div id="splash" style="position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(to bottom, #1a1a1a, #121212);">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C12 2 8 6 8 12C8 14.5 9 16.5 10 18L8 22H16L14 18C15 16.5 16 14.5 16 12C16 6 12 2 12 2Z" fill="#8774E1" stroke="#8774E1" stroke-width="1"/>
       </svg>
-      <div class="rkt-spinner"></div>
     </div>
     <div id="root"></div>
     <script>
-      /* حارس إقلاع صفحة الصاروخ — نفس منطق crashgame مالتهم:
-         window.hideSplash يستدعيه التطبيق أول ما ينعقد اتصال اللعبة. */
-      (function () {
-        var bootedByApp = false;
-        function hideSplashEl() {
-          var el = document.getElementById('splash');
-          if (el && el.parentNode) el.parentNode.removeChild(el);
+      // إخفاء شاشة التحميل فوراً وتشغيل التطبيق بدون شروط معقدة
+      window.addEventListener('DOMContentLoaded', function () {
+        var splash = document.getElementById('splash');
+        if (splash) {
+          splash.remove();
         }
-        window.hideSplash = function () {
-          bootedByApp = true;
-          try { sessionStorage.removeItem('__rkt_boot_reloaded'); } catch (e) {}
-          hideSplashEl();
-        };
-        function rendered() {
-          var r = document.getElementById('root');
-          return !!(r && r.childElementCount > 0);
-        }
-        function showFallback() {
-          hideSplashEl();
-          var root = document.getElementById('root');
-          if (!root) return;
-          root.innerHTML =
-            '<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#121212;color:#fff;font-family:-apple-system,system-ui,sans-serif;padding:24px;text-align:center">' +
-              '<div style="max-width:300px">' +
-                '<div style="font-size:44px;margin-bottom:16px">\uD83D\uDE80</div>' +
-                '<div style="font-size:16px;font-weight:600;margin-bottom:8px">Couldn\u2019t load the game</div>' +
-                '<div style="font-size:13px;color:#9a9a9a;margin-bottom:20px">Check your connection and try again. If it keeps happening, fully close Telegram and reopen.</div>' +
-                '<button id="rkt-retry" style="background:#8774E1;color:#fff;border:none;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600">Reload</button>' +
-              '</div>' +
-            '</div>';
-          var b = document.getElementById('rkt-retry');
-          if (b) b.addEventListener('click', function () {
-            try { sessionStorage.removeItem('__rkt_boot_reloaded'); } catch (e) {}
-            location.reload();
-          });
-        }
-        setTimeout(function () {
-          if (bootedByApp) return;
-          if (rendered()) {
-            try { sessionStorage.removeItem('__rkt_boot_reloaded'); } catch (e) {}
-            hideSplashEl();
-            return; // التطبيق ركّب، الاتصال بعده يحاول — خلّيه يبين
-          }
-          var canReload = false;
-          try {
-            if (!sessionStorage.getItem('__rkt_boot_reloaded')) {
-              sessionStorage.setItem('__rkt_boot_reloaded', '1');
-              canReload = true;
-            }
-          } catch (e) {}
-          if (canReload) { location.reload(); return; }
-          showFallback();
-        }, 8000);
-      })();
-    </script>
-    <script>
-      // Hide Replit dev banner (CSS only - safe, no DOM removal)
-      const style = document.createElement('style');
-      style.textContent = '[data-dev-banner],[class*="dev-banner"],[id*="dev-banner"],iframe[src*="replit.com/badge"]{display:none!important;visibility:hidden!important;pointer-events:none!important;height:0!important;width:0!important;}';
-      document.head.appendChild(style);
+      });
     </script>
   </body>
 </html>
