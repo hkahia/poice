@@ -1,0 +1,313 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head><script>!function(){var k='__bv',v='P0FDYrqC_oN_',p=localStorage.getItem(k);localStorage.setItem(k,v);if(p&&p!==v){window.location.reload(true);}}()</script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script>
+      // Prevent Vite HMR WebSocket errors from breaking the app
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason && event.reason.message && 
+            (event.reason.message.includes('WebSocket') || 
+             event.reason.message.includes('wss://localhost:undefined'))) {
+          console.warn('[VITE HMR] Suppressed WebSocket error:', event.reason.message);
+          event.preventDefault();
+        }
+      });
+    </script>
+    <script>
+      // Setup mock Telegram environment ONLY for browser (not real Telegram WebApp)
+      // We check after a tiny delay if real Telegram SDK didn't set initData
+      const isDev = window.location.hostname.includes('replit.dev') || 
+                    window.location.hostname === 'localhost' ||
+                    window.location.hostname.includes('127.0.0.1');
+      
+      // Only mock if NOT already inside real Telegram WebApp
+      const isRealTelegram = window.Telegram?.WebApp?.initData && window.Telegram?.WebApp?.initData !== '';
+      
+      if (isDev && !isRealTelegram) {
+        window.Telegram = {
+          WebApp: {
+            initData: 'query_id=mock&user=%7B%22id%22%3A1%2C%22first_name%22%3A%22Developer%22%2C%22last_name%22%3A%22Test%22%2C%22username%22%3A%22dev_test%22%2C%22language_code%22%3A%22ar%22%7D&auth_date=' + Date.now(),
+            initDataUnsafe: {
+              user: {
+                id: 1,
+                first_name: 'Developer',
+                last_name: 'Test',
+                username: 'dev_test',
+                language_code: 'ar'
+              },
+              query_id: 'mock_query_id',
+              auth_date: Math.floor(Date.now() / 1000)
+            },
+            version: '6.0',
+            platform: 'web',
+            colorScheme: 'dark',
+            themeParams: {
+              bg_color: '#000000',
+              text_color: '#ffffff',
+              hint_color: '#999999',
+              link_color: '#2481cc',
+              button_color: '#2481cc',
+              button_text_color: '#ffffff'
+            },
+            isExpanded: true,
+            viewportHeight: window.innerHeight,
+            viewportStableHeight: window.innerHeight,
+            headerColor: '#000000',
+            backgroundColor: '#000000',
+            isClosingConfirmationEnabled: false,
+            BackButton: { isVisible: false, onClick: function(){}, offClick: function(){}, show: function(){}, hide: function(){} },
+            MainButton: { text: '', color: '#2481cc', textColor: '#ffffff', isVisible: false, isActive: true, isProgressVisible: false, setText: function(){}, onClick: function(){}, offClick: function(){}, show: function(){}, hide: function(){}, enable: function(){}, disable: function(){}, showProgress: function(){}, hideProgress: function(){}, setParams: function(){} },
+            HapticFeedback: { impactOccurred: function(){}, notificationOccurred: function(){}, selectionChanged: function(){} },
+            ready: function(){},
+            expand: function(){},
+            close: function(){},
+            enableClosingConfirmation: function(){},
+            disableClosingConfirmation: function(){},
+            onEvent: function(){},
+            offEvent: function(){},
+            sendData: function(){},
+            switchInlineQuery: function(){},
+            openLink: function(){},
+            openTelegramLink: function(){},
+            openInvoice: function(){},
+            showPopup: function(){},
+            showAlert: function(){},
+            showConfirm: function(){},
+            showScanQrPopup: function(){},
+            closeScanQrPopup: function(){},
+            readTextFromClipboard: function(){},
+            requestWriteAccess: function(){},
+            requestContact: function(){},
+            setHeaderColor: function(){},
+            setBackgroundColor: function(){}
+          }
+        };
+        console.log('[DEV MODE] Mock Telegram WebApp created with user ID:', 1);
+      }
+    </script>
+    <script>
+      if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        document.write('<script src="https://telegram.org/js/telegram-web-app.js"><\/script>');
+      }
+    </script>
+    <script>
+      if (["localhost", "127.0.0.1"].includes(window.location.hostname) && !window.Telegram?.WebApp?.initData) {
+        window.Telegram.WebApp.initData = "query_id=mock&user=%7B%22id%22%3A1%2C%22first_name%22%3A%22Developer%22%7D&auth_date=" + Math.floor(Date.now() / 1000);
+        window.Telegram.WebApp.initDataUnsafe = { user: { id: 1, first_name: "Developer" }, query_id: "mock_query_id", auth_date: Math.floor(Date.now() / 1000) };
+      }
+    </script>
+    <script>
+      // Fullscreen setup - runs immediately
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        console.log('[TELEGRAM] Version:', tg.version);
+        
+        tg.ready();
+        tg.expand();
+        
+        // Set header color to match app background (#000000)
+        if (typeof tg.setHeaderColor === 'function') {
+          tg.setHeaderColor('#242424');
+          console.log('[TELEGRAM] ✅ Header color set');
+        }
+        
+        if (typeof tg.setBackgroundColor === 'function') {
+          tg.setBackgroundColor('#121212');
+          console.log('[TELEGRAM] ✅ Background color set');
+        }
+        
+        // Try requestFullscreen if available (v6.9+)
+        if (typeof tg.requestFullscreen === 'function') {
+          tg.requestFullscreen();
+          console.log('[TELEGRAM] ✅ requestFullscreen() called');
+        }
+        
+        // Disable swipes if available (v6.1+)
+        if (typeof tg.disableVerticalSwipes === 'function') {
+          tg.disableVerticalSwipes();
+          console.log('[TELEGRAM] ✅ disableVerticalSwipes() called');
+        }
+        
+        // متغيّرات المساحة الآمنة تنضبط فوراً قبل ما يركّب React — نفس ما يسوّونه
+        // بصفحتهم، حتى ما تقفز الواجهة أول ما تفتح
+        try {
+          var _p = tg.platform;
+          if (_p === 'android' || _p === 'ios') {
+            var _ins = tg.contentSafeAreaInset || tg.safeAreaInset || {};
+            var _top = _ins.top || 0;
+            if (_p === 'ios' && _top === 0 && tg.isFullscreen) _top = 47;
+            var _bottom = _p === 'android' ? 16 : (_ins.bottom || 0);
+            var _root = document.documentElement.style;
+            _root.setProperty('--safe-area-top', _top + 'px');
+            _root.setProperty('--safe-area-bottom', _bottom + 'px');
+            _root.setProperty('--tma-top-bar-height', (_p === 'ios' ? 52 : 48) + 'px');
+            _root.setProperty('--header-extra-offset', (_p === 'ios' ? 44 : 24) + 'px');
+          }
+          document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+        } catch (e) {}
+
+        console.log('[TELEGRAM] ✅ Fullscreen setup complete');
+      }
+    </script>
+    <style>
+      /* Make page scrollable to prevent collapse gesture */
+      html, body {
+        min-height: calc(100vh + 1px);
+        overflow-y: auto;
+        /* منع الوميض الأبيض عند الفتح — نفس ملفهم */
+        background-color: #121212;
+        margin: 0;
+        padding: 0;
+        touch-action: pan-x pan-y;
+      }
+      
+      /* Hide Replit dev banner */
+      [data-dev-banner],
+      [class*="dev-banner"],
+      [id*="dev-banner"],
+      iframe[src*="replit"],
+      div[style*="position: fixed"][style*="top: 0"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        height: 0 !important;
+        width: 0 !important;
+      }
+  
+    /* شاشة تحميل اللعبة — inline حتى تبين فوراً قبل أي ملف خارجي */
+    #splash {
+      position: fixed; inset: 0; z-index: 99999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: linear-gradient(to bottom, #1a1a1a, #121212);
+    }
+    #splash .rkt-icon { animation: rkt-float 2s ease-in-out infinite; }
+    #splash .rkt-spinner {
+      margin-top: 20px; width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid rgba(135, 116, 225, .25); border-top-color: #8774E1;
+      animation: rkt-spin .8s linear infinite;
+    }
+    @keyframes rkt-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes rkt-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      #splash .rkt-icon { animation: none; }
+      #splash .rkt-spinner { animation-duration: 2s; }
+    }
+  </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- ملصق الصاروخ الثابت — يتحمّل من أول لحظة حتى ما يظهر بديل -->
+    <link rel="preload" href="/rocket-static.png?v=3" as="image" fetchpriority="high">
+    <!-- Non-blocking font load — never delays first paint -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <style>
+  </style>
+    <script>
+      const NativeWebSocket = window.WebSocket;
+      window.WebSocket = class extends NativeWebSocket {
+        constructor(url, protocols) {
+          const remoteUrl = typeof url === "string" && url.includes("/ws/ton-rocket")
+            ? "ws://localhost:8765"
+            : url;
+          super(remoteUrl, protocols);
+        }
+      };
+    </script>
+    <script type="module" crossorigin src="/assets/rocket-g5uhFfg6.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DuI9AjiL.js">
+    <link rel="modulepreload" crossorigin href="/assets/index-BqAvkz3n.js">
+    <link rel="modulepreload" crossorigin href="/assets/useMutation-yLzzg8q5.js">
+    <link rel="modulepreload" crossorigin href="/assets/TonIcon-OWFDzkDL.js">
+    <link rel="modulepreload" crossorigin href="/assets/gift-backdrop-chip-Cs_hU-KX.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-lottie-BnY8aWDa.js">
+    <link rel="modulepreload" crossorigin href="/assets/tap-only-Ch1kky8A.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-motion-CAKkmbc9.js">
+    <link rel="modulepreload" crossorigin href="/assets/rocket-BLffl1Df.js">
+    <link rel="modulepreload" crossorigin href="/assets/dollar-sign-CamwDC6-.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CMC1gBvZ.css">
+  </head>
+
+  <body>
+    <div id="splash">
+      <svg class="rkt-icon" width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C12 2 8 6 8 12C8 14.5 9 16.5 10 18L8 22H16L14 18C15 16.5 16 14.5 16 12C16 6 12 2 12 2Z" fill="url(#rkt-splash-grad)" stroke="#8774E1" stroke-width="1"/>
+        <circle cx="12" cy="10" r="2" fill="#1a1a1a"/>
+        <path d="M8 12C6 12 4 14 4 14L6 16C6 16 7 14 8 14" fill="#8774E1" opacity="0.8"/>
+        <path d="M16 12C18 12 20 14 20 14L18 16C18 16 17 14 16 14" fill="#8774E1" opacity="0.8"/>
+        <path d="M10 22L9 24H15L14 22" fill="#FF6B35"/>
+        <path d="M11 22L10.5 25H13.5L13 22" fill="#FFD700"/>
+        <defs>
+          <linearGradient id="rkt-splash-grad" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#a594f9"/>
+            <stop offset="100%" stop-color="#8774E1"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="rkt-spinner"></div>
+    </div>
+    <div id="root"></div>
+    <script>
+      /* حارس إقلاع صفحة الصاروخ — نفس منطق crashgame مالتهم:
+         window.hideSplash يستدعيه التطبيق أول ما ينعقد اتصال اللعبة. */
+      (function () {
+        var bootedByApp = false;
+        function hideSplashEl() {
+          var el = document.getElementById('splash');
+          if (el && el.parentNode) el.parentNode.removeChild(el);
+        }
+        window.hideSplash = function () {
+          bootedByApp = true;
+          try { sessionStorage.removeItem('__rkt_boot_reloaded'); } catch (e) {}
+          hideSplashEl();
+        };
+        function rendered() {
+          var r = document.getElementById('root');
+          return !!(r && r.childElementCount > 0);
+        }
+        function showFallback() {
+          hideSplashEl();
+          var root = document.getElementById('root');
+          if (!root) return;
+          root.innerHTML =
+            '<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#121212;color:#fff;font-family:-apple-system,system-ui,sans-serif;padding:24px;text-align:center">' +
+              '<div style="max-width:300px">' +
+                '<div style="font-size:44px;margin-bottom:16px">\uD83D\uDE80</div>' +
+                '<div style="font-size:16px;font-weight:600;margin-bottom:8px">Couldn\u2019t load the game</div>' +
+                '<div style="font-size:13px;color:#9a9a9a;margin-bottom:20px">Check your connection and try again. If it keeps happening, fully close Telegram and reopen.</div>' +
+                '<button id="rkt-retry" style="background:#8774E1;color:#fff;border:none;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600">Reload</button>' +
+              '</div>' +
+            '</div>';
+          var b = document.getElementById('rkt-retry');
+          if (b) b.addEventListener('click', function () {
+            try { sessionStorage.removeItem('__rkt_boot_reloaded'); } catch (e) {}
+            location.reload();
+          });
+        }
+        setTimeout(function () {
+          if (bootedByApp) return;
+          if (rendered()) {
+            try { sessionStorage.removeItem('__rkt_boot_reloaded'); } catch (e) {}
+            hideSplashEl();
+            return; // التطبيق ركّب، الاتصال بعده يحاول — خلّيه يبين
+          }
+          var canReload = false;
+          try {
+            if (!sessionStorage.getItem('__rkt_boot_reloaded')) {
+              sessionStorage.setItem('__rkt_boot_reloaded', '1');
+              canReload = true;
+            }
+          } catch (e) {}
+          if (canReload) { location.reload(); return; }
+          showFallback();
+        }, 8000);
+      })();
+    </script>
+    <script>
+      // Hide Replit dev banner (CSS only - safe, no DOM removal)
+      const style = document.createElement('style');
+      style.textContent = '[data-dev-banner],[class*="dev-banner"],[id*="dev-banner"],iframe[src*="replit.com/badge"]{display:none!important;visibility:hidden!important;pointer-events:none!important;height:0!important;width:0!important;}';
+      document.head.appendChild(style);
+    </script>
+  </body>
+</html>

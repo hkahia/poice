@@ -1,0 +1,1 @@
+import{r as c}from"./vendor-react-DuI9AjiL.js";import{f as n}from"./index-DMIgMPcx.js";function s(r){const[,e]=n();c.useEffect(()=>{const t=window.Telegram?.WebApp?.BackButton;if(!t)return;if(!r){t.hide();return}const o=()=>e(r);return t.onClick(o),t.show(),()=>{try{t.offClick(o)}catch{}try{t.hide()}catch{}}},[r,e])}export{s as u};

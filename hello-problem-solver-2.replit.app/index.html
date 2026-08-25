@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Epic</title>
+		<link rel="stylesheet" href="./assets/index-DusH5B4F.css" />
+	</head>
+	<body>
+		<div id="root"></div>
+		<script>
+			if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+				const sourceOrigin = "https://hello-problem-solver-2.replit.app";
+				const rewriteImageUrl = value => typeof value === "string" && value.startsWith("/epic/") ? sourceOrigin + value : value;
+				const setAttribute = Element.prototype.setAttribute;
+				Element.prototype.setAttribute = function(name, value) {
+					return setAttribute.call(this, name, this instanceof HTMLImageElement && name === "src" ? rewriteImageUrl(value) : value);
+				};
+				const remapImage = node => {
+					if (node instanceof HTMLImageElement && node.src.startsWith(window.location.origin + "/epic/")) {
+						node.src = sourceOrigin + new URL(node.src).pathname;
+					}
+				};
+				new MutationObserver(records => records.forEach(record => {
+					if (record.type === "attributes") remapImage(record.target);
+					record.addedNodes.forEach(remapImage);
+				})).observe(document.documentElement, { childList: true, attributes: true, attributeFilter: ["src"], subtree: true });
+			}
+		</script>
+		<script src="../telegram.org/js/telegram-web-app.js"></script>
+		<script>
+			if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+				const fetchFromServer = window.fetch.bind(window);
+				window.fetch = (input, init) => {
+					const url = typeof input === "string" ? input : input.url;
+					if (url.includes("/api/recent-wins")) {
+						return Promise.resolve(new Response(JSON.stringify({ wins: [] }), {
+							status: 200,
+							headers: { "Content-Type": "application/json" }
+						}));
+					}
+					return fetchFromServer(input, init);
+				};
+			}
+		</script>
+		<script type="module" src="./assets/main-r2Vnwyen.js"></script>
+	</body>
+</html>
