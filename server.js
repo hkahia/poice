@@ -1,14 +1,13 @@
-const express = require('path'); // عذراً، سنستخدم express بالشكل الصحيح
-const expressApp = require('express');
+const express = require('express');
 const path = require('path');
 
-const app = expressApp();
+const app = express();
 const PORT = process.env.PORT || 3000;
 
-// قراءة الملفات الثابتة واللعبة مباشرة
-app.use(expressApp.static(path.join(__dirname)));
+// قراءة الملفات الثابتة
+app.use(express.static(path.join(__dirname)));
 
-// توجيه أي مسار لملف الـ index الأصلي
+// توجيه أي مسار لملف الـ index
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
